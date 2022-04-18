@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d5349fbc-038b-4c19-819d-522f86459ee6" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="e7c0a850-57b4-4346-bea1-057bf1e76f61" >
+		<http:request-connection host="localhost" protocol="HTTPS"/>
+	</http:request-config>
+	<flow name="epic-fhirFlow" doc:id="3d1d1746-c99b-4ddc-8a02-83316918b4bf" >
+		<http:listener doc:name="Listener" doc:id="c42d4c89-fa21-4fca-83df-d8a056068afe" config-ref="HTTP_Listener_config" path="/fhir"/>
+		<java:invoke-static doc:name="Invoke static" doc:id="0e80dc39-1b86-4b64-804e-4fae27e4d573" class="com.dhimate.demo.JWTProvider" method="getToken(java.lang.String,java.lang.String,java.lang.String,java.lang.String)" target="access_token">
+			<java:args ><![CDATA[#[{
+ arg0: "Anypoint_Keystore.p12",
+ arg1: "changeme" ,
+ arg2: "093ac323-dbb1-410f-b015-b3ea18304467",
+ arg3: "https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token"
+}]]]></java:args>
+		</java:invoke-static>
+		<logger level="INFO" doc:name="Logger" doc:id="a1b1685e-5c5b-4d3b-8720-8aff7f845a24" message="#[vars.access_token]"/>
+		<ee:transform doc:name="Transform Message" doc:id="b6cd9372-8602-4b2e-a2a1-44cc465193b3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+{
+	"grant_type": "client_credentials",
+	"client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+	"client_assertion": vars.access_token
+}
+ ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b5d2526d-8baa-43b8-8de1-69751c2ebb46" message="#[payload]" />
+		<http:request method="POST" doc:name="Request" doc:id="ceca9f3b-43d3-43f9-99f6-1c9c24457e71" config-ref="HTTP_Request_configuration" url="https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token"/>
+	</flow>
+</mule>
