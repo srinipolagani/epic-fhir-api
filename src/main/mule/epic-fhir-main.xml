@@ -6,13 +6,7 @@
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d5349fbc-038b-4c19-819d-522f86459ee6" >
-		<http:listener-connection host="0.0.0.0" port="8081" />
-	</http:listener-config>
-	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="e7c0a850-57b4-4346-bea1-057bf1e76f61" >
-		<http:request-connection host="localhost" protocol="HTTPS"/>
-	</http:request-config>
-	<flow name="epic-fhirFlow" doc:id="3d1d1746-c99b-4ddc-8a02-83316918b4bf" >
+		<flow name="epic-fhirFlow" doc:id="3d1d1746-c99b-4ddc-8a02-83316918b4bf" >
 		<http:listener doc:name="Listener" doc:id="c42d4c89-fa21-4fca-83df-d8a056068afe" config-ref="HTTP_Listener_config" path="/fhir"/>
 		<java:invoke-static doc:name="Invoke static" doc:id="0e80dc39-1b86-4b64-804e-4fae27e4d573" class="com.dhimate.demo.JWTProvider" method="getToken(java.lang.String,java.lang.String,java.lang.String,java.lang.String)" target="access_token">
 			<java:args ><![CDATA[#[{
